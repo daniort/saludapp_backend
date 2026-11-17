@@ -43,7 +43,7 @@ async function createBloodPressureReading(userId, reading) {
         INNER JOIN profiles p ON p.id = up.profile_id
         WHERE up.user_id = $2
           AND up.profile_id = $1
-          AND up.is_owner = TRUE
+          AND up.access_role = 'owner'
           AND up.deleted_at IS NULL
           AND p.deleted_at IS NULL
       )
@@ -85,7 +85,6 @@ async function listBloodPressureReadings(userId, options) {
       INNER JOIN profiles p ON p.id = up.profile_id
       WHERE up.user_id = $1
         AND up.profile_id = $2
-        AND up.is_owner = TRUE
         AND up.deleted_at IS NULL
         AND p.deleted_at IS NULL
     `,
@@ -160,7 +159,7 @@ async function updateBloodPressureReading(userId, readingId, changes) {
           INNER JOIN profiles p ON p.id = up.profile_id
           WHERE up.user_id = $${userIdPosition}
             AND up.profile_id = bpr.profile_id
-            AND up.is_owner = TRUE
+            AND up.access_role = 'owner'
             AND up.deleted_at IS NULL
             AND p.deleted_at IS NULL
         )
@@ -199,7 +198,7 @@ async function deleteBloodPressureReading(userId, readingId) {
           INNER JOIN profiles p ON p.id = up.profile_id
           WHERE up.user_id = $2
             AND up.profile_id = bpr.profile_id
-            AND up.is_owner = TRUE
+            AND up.access_role = 'owner'
             AND up.deleted_at IS NULL
             AND p.deleted_at IS NULL
         )

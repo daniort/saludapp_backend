@@ -5,6 +5,7 @@ const authRoutes = require('./routes/auth.routes');
 const bloodPressureRoutes = require('./routes/blood-pressure.routes');
 const glucoseRoutes = require('./routes/glucose.routes');
 const meRoutes = require('./routes/me.routes');
+const profileInvitationsRoutes = require('./routes/profile-invitations.routes');
 const profilesRoutes = require('./routes/profiles.routes');
 
 const app = express();
@@ -17,6 +18,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/blood-pressure-readings', bloodPressureRoutes);
 app.use('/api/v1/glucose-readings', glucoseRoutes);
 app.use('/api/v1/me', meRoutes);
+app.use('/api/v1/profile-invitations', profileInvitationsRoutes);
 app.use('/api/v1/profiles', profilesRoutes);
 
 app.get('/health', (req, res) => {

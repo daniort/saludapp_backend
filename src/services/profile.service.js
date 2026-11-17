@@ -14,6 +14,8 @@ function mapProfile(row) {
     ? row.birth_date.toISOString().slice(0, 10)
     : row.birth_date;
 
+  const accessRole = row.access_role || (row.is_owner ? 'owner' : 'viewer');
+
   return {
     id: row.id,
     profileType: row.profile_type,
@@ -21,7 +23,8 @@ function mapProfile(row) {
     paternalSurname: row.paternal_surname,
     maternalSurname: row.maternal_surname,
     birthDate,
-    isOwner: row.is_owner,
+    accessRole,
+    isOwner: accessRole === 'owner',
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -43,7 +46,7 @@ async function createProfile(userId, profile) {
           FROM profiles p
           INNER JOIN user_profiles up ON up.profile_id = p.id
           WHERE up.user_id = $1
-            AND up.is_owner = TRUE
+            AND up.access_role = 'owner'
             AND up.deleted_at IS NULL
             AND p.profile_type = 'personal'
             AND p.deleted_at IS NULL
@@ -92,14 +95,14 @@ async function createProfile(userId, profile) {
 
     await client.query(
       `
-        INSERT INTO user_profiles (user_id, profile_id, is_owner)
-        VALUES ($1, $2, TRUE)
+        INSERT INTO user_profiles (user_id, profile_id, is_owner, access_role)
+        VALUES ($1, $2, TRUE, 'owner')
       `,
       [userId, createdProfile.id],
     );
 
     await client.query('COMMIT');
-    return mapProfile({ ...createdProfile, is_owner: true });
+    return mapProfile({ ...createdProfile, access_role: 'owner' });
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -118,7 +121,7 @@ async function listProfiles(userId) {
         p.paternal_surname,
         p.maternal_surname,
         p.birth_date,
-        up.is_owner,
+        up.access_role,
         p.created_at,
         p.updated_at
       FROM user_profiles up
@@ -146,7 +149,7 @@ async function getProfile(userId, profileId) {
         p.paternal_surname,
         p.maternal_surname,
         p.birth_date,
-        up.is_owner,
+        up.access_role,
         p.created_at,
         p.updated_at
       FROM user_profiles up
@@ -191,7 +194,7 @@ async function updateProfile(userId, profileId, changes) {
           FROM user_profiles up
           WHERE up.user_id = $${userIdPosition}
             AND up.profile_id = p.id
-            AND up.is_owner = TRUE
+            AND up.access_role = 'owner'
             AND up.deleted_at IS NULL
         )
       RETURNING
@@ -201,7 +204,7 @@ async function updateProfile(userId, profileId, changes) {
         paternal_surname,
         maternal_surname,
         birth_date,
-        TRUE AS is_owner,
+        'owner' AS access_role,
         created_at,
         updated_at
     `,
@@ -228,7 +231,7 @@ async function deleteProfile(userId, profileId) {
         INNER JOIN user_profiles up ON up.profile_id = p.id
         WHERE p.id = $1
           AND up.user_id = $2
-          AND up.is_owner = TRUE
+          AND up.access_role = 'owner'
           AND p.deleted_at IS NULL
           AND up.deleted_at IS NULL
         FOR UPDATE OF p

@@ -42,7 +42,7 @@ async function createGlucoseReading(userId, reading) {
         INNER JOIN profiles p ON p.id = up.profile_id
         WHERE up.user_id = $2
           AND up.profile_id = $1
-          AND up.is_owner = TRUE
+          AND up.access_role = 'owner'
           AND up.deleted_at IS NULL
           AND p.deleted_at IS NULL
       )
@@ -82,7 +82,6 @@ async function listGlucoseReadings(userId, options) {
       INNER JOIN profiles p ON p.id = up.profile_id
       WHERE up.user_id = $1
         AND up.profile_id = $2
-        AND up.is_owner = TRUE
         AND up.deleted_at IS NULL
         AND p.deleted_at IS NULL
     `,
@@ -161,7 +160,7 @@ async function updateGlucoseReading(userId, readingId, changes) {
           INNER JOIN profiles p ON p.id = up.profile_id
           WHERE up.user_id = $${userIdPosition}
             AND up.profile_id = gr.profile_id
-            AND up.is_owner = TRUE
+            AND up.access_role = 'owner'
             AND up.deleted_at IS NULL
             AND p.deleted_at IS NULL
         )
@@ -199,7 +198,7 @@ async function deleteGlucoseReading(userId, readingId) {
           INNER JOIN profiles p ON p.id = up.profile_id
           WHERE up.user_id = $2
             AND up.profile_id = gr.profile_id
-            AND up.is_owner = TRUE
+            AND up.access_role = 'owner'
             AND up.deleted_at IS NULL
             AND p.deleted_at IS NULL
         )

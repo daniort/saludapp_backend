@@ -21,6 +21,7 @@ function mapProfile(row) {
     paternalSurname: row.paternal_surname,
     maternalSurname: row.maternal_surname,
     birthDate,
+    accessRole: 'owner',
     isOwner: true,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -80,7 +81,7 @@ async function provisionRegisteredUser(firebaseUser, personalProfile) {
         FROM profiles p
         INNER JOIN user_profiles up ON up.profile_id = p.id
         WHERE up.user_id = $1
-          AND up.is_owner = TRUE
+          AND up.access_role = 'owner'
           AND up.deleted_at IS NULL
           AND p.profile_type = 'personal'
           AND p.deleted_at IS NULL
@@ -128,8 +129,8 @@ async function provisionRegisteredUser(firebaseUser, personalProfile) {
 
       await client.query(
         `
-          INSERT INTO user_profiles (user_id, profile_id, is_owner)
-          VALUES ($1, $2, TRUE)
+          INSERT INTO user_profiles (user_id, profile_id, is_owner, access_role)
+          VALUES ($1, $2, TRUE, 'owner')
         `,
         [user.id, profile.id],
       );

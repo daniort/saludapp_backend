@@ -94,7 +94,10 @@ CREATE TABLE user_profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL,
   profile_id UUID NOT NULL,
-  is_owner BOOLEAN NOT NULL DEFAULT TRUE,
+  -- Se conserva temporalmente para compatibilidad con instalaciones previas.
+  -- access_role es la fuente de verdad para autorización.
+  is_owner BOOLEAN NOT NULL DEFAULT FALSE,
+  access_role VARCHAR(20) NOT NULL DEFAULT 'viewer',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   deleted_at TIMESTAMPTZ,
@@ -106,7 +109,9 @@ CREATE TABLE user_profiles (
   CONSTRAINT user_profiles_profile_fk
     FOREIGN KEY (profile_id)
     REFERENCES profiles (id)
-    ON DELETE RESTRICT
+    ON DELETE RESTRICT,
+  CONSTRAINT user_profiles_access_role_valid
+    CHECK (access_role IN ('owner', 'viewer', 'editor'))
 );
 
 -- Evita duplicar el mismo vínculo mientras se encuentre activo.
@@ -130,6 +135,67 @@ CREATE INDEX user_profiles_profile_active_idx
 
 CREATE TRIGGER user_profiles_set_updated_at
 BEFORE UPDATE ON user_profiles
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
+
+-- Invitaciones de un solo uso para compartir el acceso a un perfil. El token
+-- original nunca se guarda: solamente se persiste su hash SHA-256.
+CREATE TABLE profile_invitations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id UUID NOT NULL,
+  invited_by_user_id UUID NOT NULL,
+  token_hash CHAR(64) NOT NULL UNIQUE,
+  access_role VARCHAR(20) NOT NULL DEFAULT 'viewer',
+  context JSONB NOT NULL DEFAULT '{
+    "flow": "family_profile_invitation",
+    "version": 1,
+    "resourceType": "profile",
+    "redirectPath": "/family/invitations/accept",
+    "requiresAuthentication": true
+  }'::JSONB,
+  expires_at TIMESTAMPTZ NOT NULL,
+  accepted_by_user_id UUID,
+  accepted_at TIMESTAMPTZ,
+  revoked_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT profile_invitations_profile_fk
+    FOREIGN KEY (profile_id)
+    REFERENCES profiles (id)
+    ON DELETE RESTRICT,
+  CONSTRAINT profile_invitations_invited_by_user_fk
+    FOREIGN KEY (invited_by_user_id)
+    REFERENCES users (id)
+    ON DELETE RESTRICT,
+  CONSTRAINT profile_invitations_accepted_by_user_fk
+    FOREIGN KEY (accepted_by_user_id)
+    REFERENCES users (id)
+    ON DELETE RESTRICT,
+  CONSTRAINT profile_invitations_access_role_valid
+    CHECK (access_role IN ('viewer', 'editor')),
+  CONSTRAINT profile_invitations_context_object
+    CHECK (JSONB_TYPEOF(context) = 'object'),
+  CONSTRAINT profile_invitations_expiration_valid
+    CHECK (expires_at > created_at),
+  CONSTRAINT profile_invitations_acceptance_complete
+    CHECK (
+      (accepted_by_user_id IS NULL AND accepted_at IS NULL)
+      OR
+      (accepted_by_user_id IS NOT NULL AND accepted_at IS NOT NULL)
+    )
+);
+
+CREATE INDEX profile_invitations_profile_active_idx
+  ON profile_invitations (profile_id, created_at DESC)
+  WHERE accepted_at IS NULL AND revoked_at IS NULL;
+
+CREATE INDEX profile_invitations_expiration_idx
+  ON profile_invitations (expires_at)
+  WHERE accepted_at IS NULL AND revoked_at IS NULL;
+
+CREATE TRIGGER profile_invitations_set_updated_at
+BEFORE UPDATE ON profile_invitations
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
 
@@ -229,7 +295,8 @@ EXECUTE FUNCTION set_updated_at();
 -- Reglas que aplicará el backend al crear perfiles:
 --
 -- 1. Crear el perfil con created_by_user_id igual al usuario autenticado.
--- 2. Crear en la misma transacción el vínculo user_profiles con is_owner = TRUE.
+-- 2. Crear en la misma transacción el vínculo user_profiles con
+--    is_owner = TRUE y access_role = 'owner'.
 -- 3. Cada usuario puede tener un solo perfil personal propio.
 -- 4. Un usuario puede ser propietario de varios perfiles dependent.
 -- 5. recorded_by_user_id debe corresponder a un usuario con acceso al perfil.
