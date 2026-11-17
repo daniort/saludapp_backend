@@ -1,0 +1,668 @@
+{
+  "info": {
+    "_postman_id": "c761c173-a1d1-4f58-936e-9ef1e323ae25",
+    "name": "SaluBack API",
+    "description": "Colección para probar la API de SaluBack.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Registrar usuario con correo y contraseña",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El usuario fue registrado', function () {",
+                  "  pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  pm.collectionVariables.set('idToken', response.data.tokens.idToken);",
+                  "  pm.collectionVariables.set('refreshToken', response.data.tokens.refreshToken);",
+                  "  pm.collectionVariables.set('profileId', response.data.profile.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"givenNames\": \"Usuario\",\n  \"paternalSurname\": \"Prueba\",\n  \"maternalSurname\": null,\n  \"birthDate\": \"1990-01-15\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Crea una cuenta de Firebase, su usuario local y su perfil personal; guarda los tokens en las variables de la colección."
+          },
+          "response": []
+        },
+        {
+          "name": "Login con correo y contraseña",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La respuesta tiene un código exitoso', function () {",
+                  "  pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  const response = pm.response.json();",
+                  "  pm.collectionVariables.set('idToken', response.data.tokens.idToken);",
+                  "  pm.collectionVariables.set('refreshToken', response.data.tokens.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Autentica un usuario con Firebase mediante correo y contraseña. Guarda automáticamente los tokens en variables de la colección."
+          },
+          "response": []
+        },
+        {
+          "name": "Login con Google",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El usuario inició sesión con Google', function () {",
+                  "  pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  const response = pm.response.json();",
+                  "  pm.collectionVariables.set('idToken', response.data.tokens.idToken);",
+                  "  pm.collectionVariables.set('refreshToken', response.data.tokens.refreshToken);",
+                  "  pm.collectionVariables.set('profileId', response.data.profile.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json", "type": "text"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"googleIdToken\": \"{{googleIdToken}}\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login", "google"]
+            },
+            "description": "Intercambia un Google ID token por tokens de Firebase y crea los datos locales si es necesario."
+          },
+          "response": []
+        },
+        {
+          "name": "Renovar token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La sesión fue renovada', function () {",
+                  "  pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  const response = pm.response.json();",
+                  "  pm.collectionVariables.set('idToken', response.data.tokens.idToken);",
+                  "  pm.collectionVariables.set('refreshToken', response.data.tokens.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json", "type": "text"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "refresh"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cerrar sesión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{idToken}}", "type": "text"}
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            },
+            "description": "Valida la sesión y responde 204. El cliente debe eliminar sus tokens y desactivar la selección automática de Google."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Me",
+      "item": [
+        {
+          "name": "Obtener usuario actual",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El usuario actual fue consultado', function () {",
+                  "  pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  const response = pm.response.json();",
+                  "  const personalProfile = response.data.profiles.find(profile => profile.profileType === 'personal');",
+                  "  if (personalProfile) pm.collectionVariables.set('profileId', personalProfile.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{idToken}}", "type": "text"}
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Blood Pressure",
+      "item": [
+        {
+          "name": "Crear lectura",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La lectura fue creada', function () {",
+                  "  pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  pm.collectionVariables.set('bloodPressureReadingId', response.data.reading.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{idToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"profileId\": \"{{profileId}}\",\n  \"systolic\": 120,\n  \"diastolic\": 80,\n  \"pulse\": 72,\n  \"notes\": \"Lectura de prueba\",\n  \"takenAt\": \"{{$isoTimestamp}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/blood-pressure-readings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "blood-pressure-readings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar lecturas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{idToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/blood-pressure-readings?profileId={{profileId}}&limit=100",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "blood-pressure-readings"],
+              "query": [
+                {"key": "profileId", "value": "{{profileId}}"},
+                {"key": "limit", "value": "100"}
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar lectura",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{idToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"systolic\": 118,\n  \"diastolic\": 78,\n  \"pulse\": 70,\n  \"notes\": \"Lectura corregida\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/blood-pressure-readings/{{bloodPressureReadingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "blood-pressure-readings", "{{bloodPressureReadingId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar lectura",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{idToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/blood-pressure-readings/{{bloodPressureReadingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "blood-pressure-readings", "{{bloodPressureReadingId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Glucose",
+      "item": [
+        {
+          "name": "Crear lectura",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La lectura fue creada', function () {",
+                  "  pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  pm.collectionVariables.set('glucoseReadingId', response.data.reading.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json", "type": "text"},
+              {"key": "Authorization", "value": "Bearer {{idToken}}", "type": "text"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"profileId\": \"{{profileId}}\",\n  \"value\": 95,\n  \"takenContext\": \"fasting\",\n  \"notes\": \"Lectura de prueba\",\n  \"takenAt\": \"{{$isoTimestamp}}\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/glucose-readings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "glucose-readings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar lecturas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{idToken}}", "type": "text"}
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/glucose-readings?profileId={{profileId}}&limit=100",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "glucose-readings"],
+              "query": [
+                {"key": "profileId", "value": "{{profileId}}"},
+                {"key": "limit", "value": "100"}
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar lectura",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Content-Type", "value": "application/json", "type": "text"},
+              {"key": "Authorization", "value": "Bearer {{idToken}}", "type": "text"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": 98,\n  \"takenContext\": \"after_meal\",\n  \"notes\": \"Lectura corregida\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/glucose-readings/{{glucoseReadingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "glucose-readings", "{{glucoseReadingId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar lectura",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{idToken}}", "type": "text"}
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/glucose-readings/{{glucoseReadingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "glucose-readings", "{{glucoseReadingId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Profiles",
+      "item": [
+        {
+          "name": "Crear perfil dependiente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El perfil fue creado', function () {",
+                  "  pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  pm.collectionVariables.set('profileId', response.data.profile.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{idToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"profileType\": \"dependent\",\n  \"givenNames\": \"Familiar\",\n  \"paternalSurname\": \"Prueba\",\n  \"maternalSurname\": null,\n  \"birthDate\": \"2015-01-15\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/profiles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "profiles"
+              ]
+            },
+            "description": "Crea un perfil dependiente y vincula como propietario al usuario autenticado. El endpoint también admite personal para usuarios que todavía no tengan uno."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar perfiles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{idToken}}", "type": "text"}
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/profiles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "profiles"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener perfil",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{idToken}}", "type": "text"}
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/profiles/{{profileId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "profiles", "{{profileId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar perfil",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Content-Type", "value": "application/json", "type": "text"},
+              {"key": "Authorization", "value": "Bearer {{idToken}}", "type": "text"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"givenNames\": \"Nombre actualizado\",\n  \"paternalSurname\": \"Apellido\",\n  \"maternalSurname\": null,\n  \"birthDate\": \"2015-01-15\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/profiles/{{profileId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "profiles", "{{profileId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar perfil dependiente",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{idToken}}", "type": "text"}
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/profiles/{{profileId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "profiles", "{{profileId}}"]
+            },
+            "description": "Sólo elimina perfiles dependent. El perfil personal responde con conflicto."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "googleIdToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "profileId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bloodPressureReadingId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "glucoseReadingId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
