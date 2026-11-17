@@ -19,6 +19,10 @@ app.use('/api/v1/glucose-readings', glucoseRoutes);
 app.use('/api/v1/me', meRoutes);
 app.use('/api/v1/profiles', profilesRoutes);
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // Ruta de prueba
 app.get('/', (req, res) => {
   res.json({ mensaje: '¡Servidor funcionando correctamente con Node.js y Express!' });

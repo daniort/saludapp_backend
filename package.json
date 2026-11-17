@@ -4,8 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "check": "node scripts/check-syntax.js",
+    "test": "node --test",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js"
+  },
+  "engines": {
+    "node": ">=24.12 <25"
   },
   "keywords": [],
   "author": "",
