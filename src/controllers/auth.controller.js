@@ -42,6 +42,41 @@ function validateCredentials(email, password) {
   return null;
 }
 
+function normalizedOptionalName(value) {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim();
+  return normalized || null;
+}
+
+function googlePersonalProfile(user) {
+  const firstName = normalizedOptionalName(user.firstName);
+  const displayName = normalizedOptionalName(user.displayName);
+  const emailLocalPart = typeof user.email === 'string'
+    ? user.email.split('@')[0].trim()
+    : '';
+
+  return {
+    givenNames: firstName || displayName || emailLocalPart,
+    paternalSurname: normalizedOptionalName(user.lastName),
+    maternalSurname: null,
+    birthDate: null,
+  };
+}
+
+function googleLoginData(session, provisioned) {
+  return {
+    user: {
+      uid: session.user.uid,
+      id: provisioned.localUserId,
+      email: session.user.email,
+      displayName: provisioned.displayName || session.user.displayName,
+    },
+    profile: provisioned.profile,
+    tokens: session.tokens,
+    isNewUser: provisioned.isNewUser,
+  };
+}
+
 function firebaseErrorResponse(res, error) {
   const messages = {
     INVALID_CREDENTIALS: 'El correo o la contraseña son incorrectos.',
@@ -211,27 +246,12 @@ async function googleLogin(req, res) {
 
   try {
     const session = await signInWithGoogleIdToken(googleIdToken.trim());
-    const givenNames = session.user.firstName
-      || session.user.displayName
-      || session.user.email.split('@')[0];
-    const provisioned = await provisionRegisteredUser(session.user, {
-      givenNames,
-      paternalSurname: session.user.lastName || null,
-      maternalSurname: null,
-      birthDate: null,
-    });
+    const provisioned = await provisionRegisteredUser(
+      session.user,
+      googlePersonalProfile(session.user),
+    );
 
-    return res.status(200).json({
-      data: {
-        user: {
-          ...session.user,
-          id: provisioned.localUserId,
-        },
-        profile: provisioned.profile,
-        tokens: session.tokens,
-        isNewUser: session.isNewUser,
-      },
-    });
+    return res.status(200).json({ data: googleLoginData(session, provisioned) });
   } catch (error) {
     if (error instanceof FirebaseSignInError) return firebaseErrorResponse(res, error);
 
@@ -259,6 +279,8 @@ function logout(req, res) {
 }
 
 module.exports = {
+  googleLoginData,
+  googlePersonalProfile,
   googleLogin,
   login,
   logout,

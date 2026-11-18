@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "check": "node scripts/check-syntax.js",
-    "test": "node --test",
+    "lint": "npm run check",
+    "test": "node --test test/*.test.js",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js"
   },

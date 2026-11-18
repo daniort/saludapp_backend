@@ -95,10 +95,24 @@ function mapFirebaseGoogleError(message) {
 }
 
 function mapSession(payload) {
+  if (
+    typeof payload?.localId !== 'string'
+    || payload.localId.trim() === ''
+    || typeof payload.email !== 'string'
+    || payload.email.trim() === ''
+    || typeof payload.idToken !== 'string'
+    || payload.idToken === ''
+    || typeof payload.refreshToken !== 'string'
+    || payload.refreshToken === ''
+    || !Number.isFinite(Number(payload.expiresIn))
+  ) {
+    throw new FirebaseSignInError('FIREBASE_INVALID_RESPONSE', 502);
+  }
+
   return {
     user: {
-      uid: payload.localId,
-      email: payload.email,
+      uid: payload.localId.trim(),
+      email: payload.email.trim(),
       displayName: payload.displayName || null,
     },
     tokens: {

@@ -111,8 +111,8 @@ async function createProfile(userId, profile) {
   }
 }
 
-async function listProfiles(userId) {
-  const result = await pool.query(
+async function listProfiles(userId, database = pool) {
+  const result = await database.query(
     `
       SELECT
         p.id,
