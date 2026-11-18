@@ -19,8 +19,11 @@ Frontend debe manejar como configuración por ambiente:
 
 ```text
 API_BASE_URL=https://abundant-smile-production-15a63da4.up.railway.app
-APP_BASE_URL=<dominio o esquema público del frontend>
 ```
+
+El backend construye el enlace público con `PUBLIC_BASE_URL` y devuelve
+`invitation.shareUrl`. Frontend no debe concatenar dominios ni reconstruir este
+enlace.
 
 Todas las rutas privadas deben enviar el ID token vigente de Firebase:
 
@@ -30,13 +33,19 @@ Authorization: Bearer <firebase-id-token>
 
 ## 4. Ruta pública de invitación
 
-Frontend debe implementar la ruta:
+La aplicación móvil debe reconocer el enlace HTTPS:
 
 ```text
-/family/invitations/accept?token=<opaque-token>
+https://abundant-smile-production-15a63da4.up.railway.app/i/<opaque-token>
 ```
 
-El token debe conservarse durante un eventual login o registro para poder continuar el flujo después de autenticar al usuario.
+Android App Links e iOS Universal Links entregarán `/i/<opaque-token>` a la
+aplicación cuando esté instalada. Si no está instalada, el backend mostrará una
+página pública con acceso a Google Play o App Store. Después de instalar la app,
+el usuario deberá regresar al mensaje original y tocar nuevamente el enlace.
+
+El token debe extraerse del segmento de ruta y conservarse durante un eventual
+login o registro para poder continuar el flujo después de autenticar al usuario.
 
 El token:
 
@@ -100,16 +109,17 @@ Respuesta exitosa `201 Created`:
       "expiresAt": "2026-11-24T12:00:00.000Z",
       "createdAt": "2026-11-17T12:00:00.000Z",
       "token": "opaque-token",
-      "sharePath": "/family/invitations/accept?token=opaque-token"
+      "sharePath": "/i/opaque-token",
+      "shareUrl": "https://abundant-smile-production-15a63da4.up.railway.app/i/opaque-token"
     }
   }
 }
 ```
 
-Frontend debe construir el enlace completo utilizando su propio dominio:
+Frontend debe compartir directamente:
 
 ```text
-APP_BASE_URL + invitation.sharePath
+invitation.shareUrl
 ```
 
 Después debe mostrar acciones para:
@@ -130,7 +140,7 @@ El token solamente se devuelve al crear la invitación. Frontend no debe asumir 
 
 ### 6.1 Abrir y consultar invitación
 
-Al abrir el enlace, frontend extraerá `token` del query string y consultará:
+Al abrir el enlace, frontend extraerá `token` de `/i/:token` y consultará:
 
 ```http
 GET /api/v1/profile-invitations/:token

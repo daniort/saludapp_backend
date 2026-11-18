@@ -6,6 +6,7 @@ const {
   listProfileMembers: listProfileMemberRecords,
   removeProfileMember: removeProfileMemberRecord,
 } = require('../services/profile-sharing.service');
+const { resolvePublicBaseUrl } = require('../config/mobile-links');
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const OPAQUE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
@@ -52,7 +53,11 @@ async function createInvitation(req, res) {
   }
 
   try {
-    const invitation = await createInvitationRecord(req.user.id, profileId);
+    const invitation = await createInvitationRecord(
+      req.user.id,
+      profileId,
+      resolvePublicBaseUrl(req),
+    );
     return res.status(201).json({ data: { invitation } });
   } catch (error) {
     return sendSharingError(

@@ -3,6 +3,7 @@ const crypto = require('node:crypto');
 const pool = require('../config/db');
 
 const INVITATION_TTL_DAYS = 7;
+const INVITATION_LINK_PATH = '/i';
 const INVITATION_CONTEXT = Object.freeze({
   flow: 'family_profile_invitation',
   version: 1,
@@ -24,7 +25,9 @@ function hashToken(token) {
   return crypto.createHash('sha256').update(token, 'utf8').digest('hex');
 }
 
-function mapInvitation(row, token) {
+function mapInvitation(row, token, publicBaseUrl) {
+  const sharePath = token ? `${INVITATION_LINK_PATH}/${encodeURIComponent(token)}` : null;
+
   return {
     id: row.id,
     profile: {
@@ -43,7 +46,8 @@ function mapInvitation(row, token) {
     createdAt: row.created_at,
     ...(token ? {
       token,
-      sharePath: `${row.context.redirectPath}?token=${encodeURIComponent(token)}`,
+      sharePath,
+      shareUrl: `${publicBaseUrl}${sharePath}`,
     } : {}),
   };
 }
@@ -62,7 +66,7 @@ function assertInvitationAvailable(row) {
   }
 }
 
-async function createInvitation(userId, profileId) {
+async function createInvitation(userId, profileId, publicBaseUrl) {
   const token = crypto.randomBytes(32).toString('base64url');
   const tokenHash = hashToken(token);
   const result = await pool.query(
@@ -127,7 +131,7 @@ async function createInvitation(userId, profileId) {
     [result.rows[0].id],
   );
 
-  return mapInvitation(detailsResult.rows[0], token);
+  return mapInvitation(detailsResult.rows[0], token, publicBaseUrl);
 }
 
 async function getInvitation(token) {
