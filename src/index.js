@@ -9,6 +9,7 @@ const mobileLinksRoutes = require('./routes/mobile-links.routes');
 const oxygenSaturationRoutes = require('./routes/oxygen-saturation.routes');
 const profileInvitationsRoutes = require('./routes/profile-invitations.routes');
 const profilesRoutes = require('./routes/profiles.routes');
+const pushInstallationsRoutes = require('./routes/push-installations.routes');
 const temperatureRoutes = require('./routes/temperature.routes');
 const weightRoutes = require('./routes/weight.routes');
 
@@ -27,6 +28,7 @@ app.use('/api/v1/me', meRoutes);
 app.use('/api/v1/oxygen-saturation-readings', oxygenSaturationRoutes);
 app.use('/api/v1/profile-invitations', profileInvitationsRoutes);
 app.use('/api/v1/profiles', profilesRoutes);
+app.use('/api/v1/push', pushInstallationsRoutes);
 app.use('/api/v1/temperature-readings', temperatureRoutes);
 app.use('/api/v1/weight-readings', weightRoutes);
 
