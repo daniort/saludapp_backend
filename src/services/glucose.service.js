@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { sendProfileReadingNotification } = require('./push-notifications.service');
 
 class GlucoseError extends Error {
   constructor(code, statusCode) {
@@ -71,7 +72,21 @@ async function createGlucoseReading(userId, reading) {
     throw new GlucoseError('PROFILE_NOT_FOUND', 404);
   }
 
-  return mapReading(result.rows[0]);
+  const readingRecord = mapReading(result.rows[0]);
+  try {
+    const delivery = await sendProfileReadingNotification({
+      profileId: readingRecord.profileId,
+      recordedByUserId: userId,
+      readingType: 'glucose',
+    });
+    if (delivery.failed > 0) {
+      console.warn('Push notification delivery had failures:', delivery.failed);
+    }
+  } catch (error) {
+    console.error('Push notification delivery failed:', error.code || error.message);
+  }
+
+  return readingRecord;
 }
 
 async function listGlucoseReadings(userId, options) {

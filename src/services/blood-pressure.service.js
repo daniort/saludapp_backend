@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { sendProfileReadingNotification } = require('./push-notifications.service');
 
 class BloodPressureError extends Error {
   constructor(code, statusCode) {
@@ -74,7 +75,21 @@ async function createBloodPressureReading(userId, reading) {
     throw new BloodPressureError('PROFILE_NOT_FOUND', 404);
   }
 
-  return mapReading(result.rows[0]);
+  const readingRecord = mapReading(result.rows[0]);
+  try {
+    const delivery = await sendProfileReadingNotification({
+      profileId: readingRecord.profileId,
+      recordedByUserId: userId,
+      readingType: 'bloodPressure',
+    });
+    if (delivery.failed > 0) {
+      console.warn('Push notification delivery had failures:', delivery.failed);
+    }
+  } catch (error) {
+    console.error('Push notification delivery failed:', error.code || error.message);
+  }
+
+  return readingRecord;
 }
 
 async function listBloodPressureReadings(userId, options) {

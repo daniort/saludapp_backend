@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { sendProfileReadingNotification } = require('./push-notifications.service');
 
 const MEASUREMENT_TYPES = Object.freeze({
   weight: Object.freeze({
@@ -121,7 +122,21 @@ async function createHealthMeasurement(type, userId, reading) {
     throw new HealthMeasurementError('PROFILE_NOT_FOUND', 404);
   }
 
-  return mapReading(descriptor, result.rows[0]);
+  const mappedReading = mapReading(descriptor, result.rows[0]);
+  try {
+    const delivery = await sendProfileReadingNotification({
+      profileId: mappedReading.profileId,
+      recordedByUserId: userId,
+      readingType: type,
+    });
+    if (delivery.failed > 0) {
+      console.warn('Push notification delivery had failures:', delivery.failed);
+    }
+  } catch (error) {
+    console.error('Push notification delivery failed:', error.code || error.message);
+  }
+
+  return mappedReading;
 }
 
 async function listHealthMeasurements(type, userId, options) {
