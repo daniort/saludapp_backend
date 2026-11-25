@@ -5,6 +5,7 @@ const {
   getProfile,
   listProfiles,
   updateProfile,
+  updateProfileAlias,
 } = require('../controllers/profiles.controller');
 const {
   createInvitation,
@@ -43,6 +44,7 @@ router.get('/:profileId/medications', requireAuth, listMedications);
 router.patch('/:profileId/medications/:medicationId', requireAuth, updateMedication);
 router.delete('/:profileId/medications/:medicationId', requireAuth, deleteMedication);
 router.get('/:profileId', requireAuth, getProfile);
+router.patch('/:profileId/alias', requireAuth, updateProfileAlias);
 router.patch('/:profileId', requireAuth, updateProfile);
 router.delete('/:profileId', requireAuth, deleteProfile);
 

@@ -5,6 +5,7 @@ const {
   getProfile: getProfileRecord,
   listProfiles: listProfileRecords,
   updateProfile: updateProfileRecord,
+  updateProfileAlias: updateProfileAliasRecord,
 } = require('../services/profile.service');
 
 const PROFILE_TYPES = new Set(['personal', 'dependent']);
@@ -156,6 +157,45 @@ async function getProfile(req, res) {
   }
 }
 
+async function updateProfileAlias(req, res) {
+  const { profileId } = req.params;
+  const body = req.body || {};
+
+  if (!UUID_PATTERN.test(profileId)) {
+    return res.status(400).json({
+      error: { code: 'PROFILE_ID_INVALID', message: 'profileId no es un UUID válido.' },
+    });
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(body, 'displayAlias')) {
+    return res.status(400).json({
+      error: { code: 'DISPLAY_ALIAS_REQUIRED', message: 'displayAlias es obligatorio; usa null para quitarlo.' },
+    });
+  }
+
+  let displayAlias = null;
+  if (body.displayAlias !== null) {
+    if (typeof body.displayAlias !== 'string') {
+      return res.status(400).json({
+        error: { code: 'DISPLAY_ALIAS_INVALID', message: 'displayAlias debe ser texto o null.' },
+      });
+    }
+    displayAlias = body.displayAlias.trim();
+    if (displayAlias.length === 0 || displayAlias.length > 80) {
+      return res.status(400).json({
+        error: { code: 'DISPLAY_ALIAS_INVALID', message: 'displayAlias debe tener entre 1 y 80 caracteres.' },
+      });
+    }
+  }
+
+  try {
+    const alias = await updateProfileAliasRecord(req.user.id, profileId, displayAlias);
+    return res.status(200).json({ data: { alias } });
+  } catch (error) {
+    return sendProfileError(res, error, 'PROFILE_ALIAS_UPDATE_FAILED', 'No fue posible actualizar el alias del perfil.');
+  }
+}
+
 async function updateProfile(req, res) {
   const { profileId } = req.params;
   const body = req.body || {};
@@ -269,4 +309,5 @@ module.exports = {
   getProfile,
   listProfiles,
   updateProfile,
+  updateProfileAlias,
 };

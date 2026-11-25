@@ -9,7 +9,12 @@ const INVALID_FID_CODES = new Set([
 async function sendProfileReadingNotification({ profileId, recordedByUserId, readingType }) {
   const installationsResult = await pool.query(
     `
-      SELECT DISTINCT installation.installation_id
+      SELECT DISTINCT installation.installation_id,
+        COALESCE(
+          NULLIF(BTRIM(recipient.display_alias), ''),
+          NULLIF(BTRIM(CONCAT_WS(' ', p.given_names, p.paternal_surname, p.maternal_surname)), ''),
+          'un familiar'
+        ) AS recipient_profile_name
       FROM user_profiles recipient
       INNER JOIN user_push_installations installation
         ON installation.user_id = recipient.user_id
@@ -27,15 +32,15 @@ async function sendProfileReadingNotification({ profileId, recordedByUserId, rea
     [profileId, recordedByUserId],
   );
 
-  const fids = installationsResult.rows.map((row) => row.installation_id);
-  if (fids.length === 0) return { sent: 0, failed: 0 };
+  const installations = installationsResult.rows;
+  if (installations.length === 0) return { sent: 0, failed: 0 };
 
   const messaging = getFirebaseAdminMessaging();
-  const result = await messaging.sendEach(fids.map((fid) => ({
-    fid,
+  const result = await messaging.sendEach(installations.map((installation) => ({
+    fid: installation.installation_id,
     notification: {
       title: 'Nueva medición registrada',
-      body: 'Hay una nueva medición de uno de tus familiares.',
+      body: `Hay una nueva medición de '${installation.recipient_profile_name}'.`,
     },
     data: {
       type: 'profile_reading_created',
@@ -52,7 +57,7 @@ async function sendProfileReadingNotification({ profileId, recordedByUserId, rea
 
   const invalidFids = result.responses.flatMap((response, index) => (
     !response.success && INVALID_FID_CODES.has(response.error?.code)
-      ? [fids[index]]
+      ? [installations[index].installation_id]
       : []
   ));
 

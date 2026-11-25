@@ -104,6 +104,7 @@ CREATE TABLE user_profiles (
   -- access_role es la fuente de verdad para autorización.
   is_owner BOOLEAN NOT NULL DEFAULT FALSE,
   access_role VARCHAR(20) NOT NULL DEFAULT 'viewer',
+  display_alias VARCHAR(80),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   deleted_at TIMESTAMPTZ,

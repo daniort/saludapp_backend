@@ -23,6 +23,7 @@ function mapProfile(row) {
     paternalSurname: row.paternal_surname,
     maternalSurname: row.maternal_surname,
     birthDate,
+    displayAlias: row.display_alias ?? null,
     accessRole,
     isOwner: accessRole === 'owner',
     createdAt: row.created_at,
@@ -122,6 +123,7 @@ async function listProfiles(userId, database = pool) {
         p.maternal_surname,
         p.birth_date,
         up.access_role,
+        up.display_alias,
         p.created_at,
         p.updated_at
       FROM user_profiles up
@@ -150,6 +152,7 @@ async function getProfile(userId, profileId) {
         p.maternal_surname,
         p.birth_date,
         up.access_role,
+        up.display_alias,
         p.created_at,
         p.updated_at
       FROM user_profiles up
@@ -218,6 +221,32 @@ async function updateProfile(userId, profileId, changes) {
   return mapProfile(result.rows[0]);
 }
 
+async function updateProfileAlias(userId, profileId, displayAlias) {
+  const result = await pool.query(
+    `
+      UPDATE user_profiles up
+      SET display_alias = $3
+      FROM profiles p
+      WHERE up.user_id = $1
+        AND up.profile_id = $2
+        AND p.id = up.profile_id
+        AND up.deleted_at IS NULL
+        AND p.deleted_at IS NULL
+      RETURNING up.profile_id, up.display_alias
+    `,
+    [userId, profileId, displayAlias],
+  );
+
+  if (result.rowCount === 0) {
+    throw new ProfileError('PROFILE_NOT_FOUND', 404);
+  }
+
+  return {
+    profileId: result.rows[0].profile_id,
+    displayAlias: result.rows[0].display_alias,
+  };
+}
+
 async function deleteProfile(userId, profileId) {
   const client = await pool.connect();
 
@@ -278,4 +307,5 @@ module.exports = {
   getProfile,
   listProfiles,
   updateProfile,
+  updateProfileAlias,
 };

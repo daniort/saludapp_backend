@@ -1,0 +1,6 @@
+BEGIN;
+
+ALTER TABLE user_profiles
+  ADD COLUMN IF NOT EXISTS display_alias VARCHAR(80);
+
+COMMIT;
