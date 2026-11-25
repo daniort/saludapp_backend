@@ -35,7 +35,7 @@ async function sendProfileReadingNotification({ profileId, recordedByUserId, rea
     fid,
     notification: {
       title: 'Nueva medición registrada',
-      body: 'Hay una nueva medición en uno de tus perfiles compartidos.',
+      body: 'Hay una nueva medición de uno de tus familiares.',
     },
     data: {
       type: 'profile_reading_created',
