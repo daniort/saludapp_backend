@@ -47,6 +47,10 @@ function baseRow(values) {
 test('crear peso guarda kilogramos y exige acceso owner', async (t) => {
   let capturedSql;
   t.mock.method(pool, 'query', async (sql) => {
+    if (sql.includes('SELECT DISTINCT installation.installation_id')) {
+      return { rowCount: 0, rows: [] };
+    }
+
     capturedSql = sql;
     return {
       rowCount: 1,
@@ -68,9 +72,13 @@ test('crear peso guarda kilogramos y exige acceso owner', async (t) => {
 });
 
 test('crear temperatura usa measurementSite unknown por defecto', async (t) => {
-  let parameters;
+  let insertParameters;
   t.mock.method(pool, 'query', async (sql, values) => {
-    parameters = values;
+    if (sql.includes('SELECT DISTINCT installation.installation_id')) {
+      return { rowCount: 0, rows: [] };
+    }
+
+    insertParameters = values;
     return {
       rowCount: 1,
       rows: [baseRow({
@@ -93,17 +101,23 @@ test('crear temperatura usa measurementSite unknown por defecto', async (t) => {
   assert.equal(response.statusCode, 201);
   assert.equal(response.body.data.reading.temperatureCelsius, 37.2);
   assert.equal(response.body.data.reading.measurementSite, 'unknown');
-  assert.ok(parameters.includes('unknown'));
+  assert.ok(insertParameters.includes('unknown'));
 });
 
 test('crear saturación conserva porcentaje y pulso del oxímetro', async (t) => {
-  t.mock.method(pool, 'query', async () => ({
-    rowCount: 1,
-    rows: [baseRow({
-      oxygen_saturation_percent: '97.00',
-      pulse_bpm: 68,
-    })],
-  }));
+  t.mock.method(pool, 'query', async (sql) => {
+    if (sql.includes('SELECT DISTINCT installation.installation_id')) {
+      return { rowCount: 0, rows: [] };
+    }
+
+    return {
+      rowCount: 1,
+      rows: [baseRow({
+        oxygen_saturation_percent: '97.00',
+        pulse_bpm: 68,
+      })],
+    };
+  });
   const response = responseRecorder();
 
   await oxygenSaturationReadingsController.createReading({
